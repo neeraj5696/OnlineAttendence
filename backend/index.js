@@ -4,6 +4,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const multer = require("multer");
 const path = require("path");
+const fs = require('fs');
 
 // Initialize app
 const app = express();
@@ -37,10 +38,14 @@ const Attendance = mongoose.model("Attendance", attendanceSchema, "attendances")
 // Create Router
 const router = express.Router();
 
-// Configure multer for image upload
+// Configure multer storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "./public"); // Save files in 'uploads' folder
+    const uploadDir = "./public";
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true }); // Create folder if it doesn't exist
+    }
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     cb(null, Date.now() + path.extname(file.originalname)); // Add timestamp to the filename
@@ -49,28 +54,36 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+
 // API Routes
 router.post("/attendance", upload.single("image"), async (req, res) => {
   try {
     // Extract data from request body
     const { latitude, longitude, timestamp } = req.body;
     const imagePath = req.file ? req.file.path : null; // Save the path of the uploaded image
- 
+
 
     console.log("Received from frontend:", { latitude, longitude, timestamp, imagePath });
 
     if (!imagePath) {
       return res.status(400).json({ message: "Image is required." });
     }
-    
+
     if (!latitude || !longitude) {
       return res.status(400).json({ message: "Location is required." });
     }
 
+    // Check if file exists
+    const fs = require('fs');
+    if (!fs.existsSync(imagePath)) {
+      console.error("File upload failed: File does not exist.");
+      return res.status(500).json({ message: "Failed to upload image." });
+    }
+
     // Save attendance to database
     const attendance = new Attendance({ image: imagePath, latitude, longitude, timestamp });
-    
-    const result =  await attendance.save();
+
+    const result = await attendance.save();
     console.log('Saved Attendance', result)
 
     res.status(201).json({ message: "Attendance marked successfully." });
