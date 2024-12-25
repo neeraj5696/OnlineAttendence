@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Webcam from "react-webcam";
-import './Attendence.css';
+
 import axios from "axios";
 
 const AttendancePage = () => {
@@ -90,26 +90,26 @@ const AttendancePage = () => {
   };
 
   return (
-    <div className="outer-container">
-      <div className="content-container">
+    <div className="flex items-center justify-center h-screen w-screen bg-gray-100">
+      <div className="flex flex-col items-center justify-center border-4 border-gray-400 rounded-xl p-8 bg-white shadow-lg max-w-lg w-11/12">
         <h1 className="header">Online Attendance</h1>
-        <div className="webcam-container">
+        <div className="flex items-center justify-center w-full max-w-md aspect-[4/3] bg-gray-200 border-2 border-gray-300 rounded-lg shadow-md">
           {webcamEnabled ? (
             <Webcam
               audio={false}
               ref={webcamRef}
               screenshotFormat="image/jpeg"
-              className="webcam"
+              className="w-full h-auto max-h-full rounded-lg object-contain"
             />
           ) : (
             <p>Webcam is stopped.</p>
           )}
         </div>
-        <div className="button-container">
-          <button className="mark-attendance-button" onClick={handleMarkAttendance}>
+        <div className="flex gap-5 justify-center mt-5">
+          <button className="px-6 py-3 text-lg font-bold rounded-lg cursor-pointer transition-all duration-300 shadow-md text-white bg-gradient-to-r from-green-500 to-green-600 border-2 border-green-600 hover:bg-gradient-to-r hover:from-green-600 hover:to-green-700 hover:border-green-700 hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:shadow-sm focus:outline-none focus:ring-4 focus:ring-green-400" onClick={handleMarkAttendance}>
             Mark Attendance
           </button>
-          <button className="stop-webcam-button" onClick={handleStopWebcam}>
+          <button className="px-6 py-3 text-lg font-bold rounded-lg cursor-pointer transition-all duration-300 shadow-md text-white bg-red-600 border-2 border-red-600 hover:bg-red-700 hover:border-red-700 hover:shadow-lg hover:scale-105 active:scale-100 active:shadow-sm" onClick={handleStopWebcam}>
             Stop Webcam
           </button>
         </div>
