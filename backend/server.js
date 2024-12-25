@@ -90,6 +90,10 @@ router.get("/attendance", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch attendance records." });
   }
 });
+app.get('/', (req, res) => {
+  const link = `http://localhost:${PORT}/api/attendance`;
+  res.send(`To get All Log: ${link}`);
+});
 
 // Use Router in App
 app.use("/api", router);
