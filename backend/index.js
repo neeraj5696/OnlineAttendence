@@ -3,8 +3,6 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const multer = require("multer");
-const path = require("path");
-const fs = require('fs');
 
 // Initialize app
 const app = express();
@@ -15,8 +13,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // MongoDB Connection
-mongoose.connect('mongodb://127.0.0.1:27017/OnlinePresent', {
-})
+mongoose.connect('mongodb://127.0.0.1:27017/OnlinePresent', {})
   .then(() => {
     console.log('MongoDB connected successfully');
   })
@@ -26,68 +23,49 @@ mongoose.connect('mongodb://127.0.0.1:27017/OnlinePresent', {
 
 // Define Attendance Schema and Model
 const attendanceSchema = new mongoose.Schema({
-  image: { type: String, required: true },  // We store image path or base64 here
+  image: { type: String, required: true },  // Image stored as base64 string
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },
   timestamp: { type: Date, default: Date.now },
 });
-
 
 const Attendance = mongoose.model("Attendance", attendanceSchema, "attendances"); // Explicitly set collection name
 
 // Create Router
 const router = express.Router();
 
-// Configure multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = "./public";
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true }); // Create folder if it doesn't exist
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); // Add timestamp to the filename
-  },
-});
-
+// Configure multer for in-memory storage
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-
 
 // API Routes
 router.post("/attendance", upload.single("image"), async (req, res) => {
   try {
     // Extract data from request body
     const { latitude, longitude, timestamp } = req.body;
-    const imagePath = req.file ? req.file.path : null; // Save the path of the uploaded image
 
-
-    console.log("Received from frontend:", { latitude, longitude, timestamp, imagePath });
-
-    if (!imagePath) {
+    if (!req.file) {
       return res.status(400).json({ message: "Image is required." });
     }
-
     if (!latitude || !longitude) {
       return res.status(400).json({ message: "Location is required." });
     }
 
-    // Check if file exists
-    const fs = require('fs');
-    if (!fs.existsSync(imagePath)) {
-      console.error("File upload failed: File does not exist.");
-      return res.status(500).json({ message: "Failed to upload image." });
-    }
+    // Convert image to base64
+    const base64Image = req.file.buffer.toString('base64');
 
     // Save attendance to database
-    const attendance = new Attendance({ image: imagePath, latitude, longitude, timestamp });
+    const attendance = new Attendance({ 
+      image: base64Image, 
+      latitude: parseFloat(latitude), 
+      longitude: parseFloat(longitude), 
+      timestamp: timestamp ? new Date(timestamp) : undefined 
+    });
 
     const result = await attendance.save();
-    console.log('Saved Attendance', result)
+    console.log('Saved Attendance:', result);
 
     res.status(201).json({ message: "Attendance marked successfully." });
-    console.log('Attendance marked successfully')
   } catch (error) {
     console.error("Error marking attendance:", error);
     res.status(500).json({ message: "Failed to mark attendance." });
@@ -103,6 +81,7 @@ router.get("/attendance", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch attendance records." });
   }
 });
+
 app.get('/', (req, res) => {
   const link = `http://localhost:${PORT}/api/attendance`;
   res.send(`To get All Log: ${link}`);
