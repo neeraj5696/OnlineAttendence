@@ -63,7 +63,7 @@ const AttendancePage = () => {
           console.log("Attendance marked successfully:", response.data);
           alert("Attendance marked successfully!");
           setImageSrc(null);
-          setWebcamEnabled(false); // Re-enable webcam for a new capture
+          setWebcamEnabled(false); // Disable webcam for a new capture
         } catch (error) {
           console.error("Error marking attendance:", error);
           alert("Failed to mark attendance. Please check your network connection and try again.");
