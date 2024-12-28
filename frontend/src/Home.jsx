@@ -9,27 +9,21 @@ const AttendancePage = () => {
 
   const webcamRef = React.useRef(null);
 
-  // Function to capture photo
-  const handleCapturePhoto = () => {
+  // Function to mark attendance
+  const handleMarkAttendance = async () => {
+    // Validate webcam
     if (!webcamRef.current) {
       alert("Webcam not initialized. Please try again.");
       return;
     }
+
+    // Capture photo
     const capturedImage = webcamRef.current.getScreenshot();
     if (!capturedImage) {
       alert("Failed to capture image. Please try again.");
       return;
     }
     setImageSrc(capturedImage);
-    setWebcamEnabled(false); // Disable webcam after capturing
-  };
-
-  // Function to mark attendance
-  const handleMarkAttendance = async () => {
-    if (!imageSrc) {
-      alert("Please capture an image before marking attendance.");
-      return;
-    }
 
     // Check for geolocation support
     if (!navigator.geolocation) {
@@ -44,7 +38,7 @@ const AttendancePage = () => {
 
         // Prepare data for API call
         const attendanceData = new FormData();
-        attendanceData.append("image", dataURItoBlob(imageSrc), "attendance.jpg");
+        attendanceData.append("image", dataURItoBlob(capturedImage), "attendance.jpg");
         attendanceData.append("latitude", latitude);
         attendanceData.append("longitude", longitude);
         attendanceData.append("timestamp", new Date().toISOString()); // Add the timestamp
@@ -52,7 +46,7 @@ const AttendancePage = () => {
         try {
           // API call to mark attendance
           const response = await axios.post(
-             "https://online-attendence-backend.vercel.app/api/attendance",
+            "https://online-attendence-backend.vercel.app/api/attendance",
             attendanceData,
             {
               headers: {
@@ -88,44 +82,22 @@ const AttendancePage = () => {
     return new Blob([uintArray], { type: mimeString });
   };
 
-  // Function to reset the webcam
-  const handleResetWebcam = () => {
-    setImageSrc(null);
-    setWebcamEnabled(true);
-  };
-
   return (
     <div className="flex items-center justify-center h-screen w-screen bg-gray-100">
       <div className="flex flex-col items-center justify-center border-4 border-gray-400 rounded-xl p-8 bg-white shadow-lg max-w-lg w-11/12">
-        <h1 className="header">Online Attendance</h1>
+        <h1 className="text-2xl font-extrabold text-gray-800 mb-4 tracking-wide uppercase text-center"
+        >Online Attendance</h1>
         <div className="flex items-center justify-center w-full max-w-md aspect-[4/3] bg-gray-200 border-2 border-gray-300 rounded-lg shadow-md">
-          {webcamEnabled ? (
+          {webcamEnabled && (
             <Webcam
               audio={false}
               ref={webcamRef}
               screenshotFormat="image/jpeg"
               className="w-full h-auto max-h-full rounded-lg object-contain"
             />
-          ) : (
-            imageSrc && <img src={imageSrc} alt="Captured" className="w-full h-auto rounded-lg" />
           )}
         </div>
         <div className="flex gap-5 justify-center mt-5">
-          {webcamEnabled ? (
-            <button
-              className="px-6 py-3 text-lg font-bold rounded-lg cursor-pointer transition-all duration-300 shadow-md text-white bg-gradient-to-r from-blue-500 to-blue-600 border-2 border-blue-600 hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 hover:border-blue-700 hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-400"
-              onClick={handleCapturePhoto}
-            >
-              Capture
-            </button>
-          ) : (
-            <button
-              className="px-6 py-3 text-lg font-bold rounded-lg cursor-pointer transition-all duration-300 shadow-md text-white bg-gradient-to-r from-green-500 to-green-600 border-2 border-green-600 hover:bg-gradient-to-r hover:from-green-600 hover:to-green-700 hover:border-green-700 hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:shadow-sm focus:outline-none focus:ring-4 focus:ring-green-400"
-              onClick={handleResetWebcam}
-            >
-              Retake
-            </button>
-          )}
           <button
             className="px-6 py-3 text-lg font-bold rounded-lg cursor-pointer transition-all duration-300 shadow-md text-white bg-gradient-to-r from-green-500 to-green-600 border-2 border-green-600 hover:bg-gradient-to-r hover:from-green-600 hover:to-green-700 hover:border-green-700 hover:shadow-lg hover:-translate-y-1 active:translate-y-0 active:shadow-sm focus:outline-none focus:ring-4 focus:ring-green-400"
             onClick={handleMarkAttendance}
@@ -133,7 +105,6 @@ const AttendancePage = () => {
             Mark Attendance
           </button>
         </div>
-       
       </div>
     </div>
   );
