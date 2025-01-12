@@ -1,0 +1,82 @@
+.form-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: linear-gradient(to bottom, #1a1a1a, #333);
+}
+
+.form {
+  background: #fff;
+  padding: 30px 40px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.message {
+  margin-bottom: 2px;
+  color: red;
+}
+
+.movie-icon {
+  color: red;
+  font-size: 50px;
+  margin-bottom: 20px;
+}
+
+.input-container {
+  margin-bottom: 20px;
+}
+
+.input-container input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
+.button-container {
+  margin-bottom: 20px;
+}
+
+.button-container button {
+  width: 100%;
+  padding: 10px;
+  background: red;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.button-container button:hover {
+  background: darkred;
+}
+
+.bottom-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.account-message {
+  color: #333;
+}
+
+.redirect-button {
+  background: none;
+  border: none;
+  color: red;
+  cursor: pointer;
+  font-size: 16px;
+  text-decoration: underline;
+}
+
+.redirect-button:hover {
+  color: darkred;
+}
