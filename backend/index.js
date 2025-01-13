@@ -3,17 +3,10 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const multer = require("multer");
-require('dotenv').config();
 const nodemailer = require('nodemailer');
+const { getMaxListeners } = require("nodemailer/lib/xoauth2");
 
-// Configure nodemailer transport
-const transporter = nodemailer.createTransport({
-  service: 'gmail',  // You can use other email services as well
-  auth: {
-    user: process.env.EMAIL_USER,       // sender email address
-    pass: process.env.EMAIL_PASSWORD,   // sender email password or app password
-  },
-});
+require('dotenv').config();
 
 
 // Initialize app
@@ -26,6 +19,17 @@ app.use(cors({
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+
+app.use(bodyParser.json());
+
+// Create a transporter using Gmail
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER|| 'neerajkumar5696@gmail.com', // Add your Gmail address in .env file
+    pass: process.env.EMAIL_PASS, // Add your Gmail password or app password
+  },
+});
 
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://neerajkumar5696:a8QOGFvjlD9T3F7y@cluster0.sw64i.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
@@ -57,18 +61,11 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 // API Routes
-// POST route to mark attendance and send an email
 router.post("/attendance", upload.single("image"), async (req, res) => {
   try {
-    const { latitude, longitude, timestamp, email, EmployeeId } = req.body;
+    // Extract data from request body
+    const { latitude, longitude, timestamp } = req.body;
 
-    // Validate required fields
-    if (!email) {
-      return res.status(400).json({ message: "Email is required." });
-    }
-    if (!EmployeeId) {
-      return res.status(400).json({ message: "Employee ID is required." });
-    }
     if (!req.file) {
       return res.status(400).json({ message: "Image is required." });
     }
@@ -79,74 +76,75 @@ router.post("/attendance", upload.single("image"), async (req, res) => {
     // Convert image to base64
     const base64Image = req.file.buffer.toString('base64');
 
-    // Save attendance to the database
-    const attendance = new Attendance({
-      image: base64Image,
-      latitude: parseFloat(latitude),
-      longitude: parseFloat(longitude),
-      timestamp: timestamp ? new Date(timestamp) : undefined
+     // If timestamp is provided, format it; else, use the current timestamp
+     const formattedTimestamp = timestamp
+     ? new Date(timestamp).toLocaleString('en-US', {
+         weekday: 'long',
+         year: 'numeric',
+         month: 'long',
+         day: 'numeric',
+         hour: 'numeric',
+         minute: 'numeric',
+         second: 'numeric',
+         hour12: true
+       })
+     : new Date().toLocaleString('en-US', {
+         weekday: 'long',
+         year: 'numeric',
+         month: 'long',
+         day: 'numeric',
+         hour: 'numeric',
+         minute: 'numeric',
+         second: 'numeric',
+         hour12: true
+       });
+
+    // Save attendance to database
+    const attendance = new Attendance({ 
+      image: base64Image, 
+      latitude: parseFloat(latitude), 
+      longitude: parseFloat(longitude), 
+      timestamp: timestamp ? new Date(timestamp) : undefined 
     });
 
-    const savedAttendance = await attendance.save();
+    const result = await attendance.save();
+    console.log('Saved Attendance:');
 
-    // Email content
-    const subject = "Attendance Logged Successfully";
-    const text = `
-      Hello,
-
-      Attendance has been successfully logged for Employee ID: ${EmployeeId}.
-
-      Details:
-      - Employee ID: ${EmployeeId}
-      - Email: ${email}
-      - Latitude: ${latitude}
-      - Longitude: ${longitude}
-      - Timestamp: ${new Date(timestamp).toLocaleString()}
-      - Image: See attachment.
-
-      Thank you.
-    `;
-    const htmlContent = `
-      <h1>Attendance Logged Successfully</h1>
-      <p><strong>Employee ID:</strong> ${EmployeeId}</p>
-      <p><strong>Email:</strong> ${email}</p>
-      <p><strong>Latitude:</strong> ${latitude}</p>
-      <p><strong>Longitude:</strong> ${longitude}</p>
-      <p><strong>Timestamp:</strong> ${new Date(timestamp).toLocaleString()}</p>
-      <p><strong>Image:</strong></p>
-      <img src="data:image/jpeg;base64,${base64Image}" alt="Attendance Image" width="300px" />
-
-      <p>Thank you.</p>
-    `;
-
-    // Send email
+    // Send email notification after saving attendance
     const mailOptions = {
-      from: process.env.EMAIL_USER,  // Sender email
-      to: neerajkumar5696@gmail.com,  // Recipient's email
-      subject: subject,  // Subject of the email
-      text: text,  // Plain text version of the email
-      html: htmlContent,  // HTML version of the email
+      from: process.env.EMAIL_USER, // Sender address
+      to: 'neerajkumaryadava5696@gmail.com', // Recipient address
+      subject: 'New Attendance Recorded',
+      text: `A new attendance record has been marked.\n\nDetails:\nLocation: ${latitude}, ${longitude}\nTimestamp: ${timestamp || new Date()}`,
+      html: `<p>A new attendance record has been marked.</p>
+             <p><strong>Location:</strong> ${latitude}, ${longitude}</p>
+             <p><strong>Timestamp:</strong> ${formattedTimestamp}</p>`,
       attachments: [
         {
-          filename: 'attendance_image.jpg',
-          content: base64Image,
-          encoding: 'base64',
-        },
-      ],
+          filename: 'attendance-image.jpg',  // Image file name
+          content: base64Image,  // Base64 string content
+          encoding: 'base64',  // Encode as base64
+          cid: 'attendanceImage'  // Unique ID for inline embedding if needed
+        }
+      ]
     };
 
-    // Send the email using Nodemailer
-    await transporter.sendMail(mailOptions);
 
-    console.log('Email sent successfully');
-    res.status(201).json({ message: "Attendance marked and email sent successfully." });
+    // Send email
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email:", error);
+      } else {
+        console.log("Email sent: " + info.response);
+      }
+    });
 
+    res.status(201).json({ message: "Attendance marked successfully." });
   } catch (error) {
     console.error("Error marking attendance:", error);
     res.status(500).json({ message: "Failed to mark attendance." });
   }
 });
-
 
 router.get('/attendance', async (req, res) => {
   try {
@@ -285,8 +283,8 @@ app.get('/', (req, res) => {
   </body>
   </html>
 `;
-  res.send(htmlContent);
-
+res.send(htmlContent);
+ 
 });
 
 // Use Router in App

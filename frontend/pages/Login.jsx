@@ -6,34 +6,29 @@ import "../pages/auth.css";
 
 function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [employeeId, setEmployeeId] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if email or password is empty
-    if (!email) {
-      setMessage("Email is required.");
-      return; // Prevent submission if email is empty
-    }
-
-    if (!password) {
-      setMessage("Password is required.");
-      return; // Prevent submission if password is empty
+    if (!employeeId || !password) {
+      setMessage("Employee ID and password are required.");
+      return;
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/api/login", {
-        email,
-        password,
+      const res = await axios.post("http://localhost:5000/api/auth/login", {
+        employeeId,
+        password
       });
 
       localStorage.setItem("token", res.data.token);
+      localStorage.setItem("employeeId", employeeId);
       setMessage("User logged in successfully");
       setTimeout(() => {
-        navigate("/Home");
+        navigate("/home");
       }, 2000);
     } catch (error) {
       console.error("Error occurred", error);
@@ -44,24 +39,21 @@ function Login() {
   return (
     <div className="form-container">
       <form onSubmit={handleSubmit} className="form">
-        {/* Message display */}
         {message && <div className="message">{message}</div>}
 
         <div className="movie-icon">
           <MdMovie />
         </div>
 
-        {/* Email input */}
         <div className="input-container">
           <input
             type="text"
-            placeholder="Email Address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Employee ID"
+            value={employeeId}
+            onChange={(e) => setEmployeeId(e.target.value)}
           />
         </div>
 
-        {/* Password input */}
         <div className="input-container">
           <input
             type="password"
@@ -71,12 +63,10 @@ function Login() {
           />
         </div>
 
-        {/* Submit button */}
         <div className="button-container">
           <button type="submit">Login to your account</button>
         </div>
 
-        {/* Bottom section with signup link */}
         <div className="bottom-container">
           <div className="account-message">Don't have an account?</div>
           <div>

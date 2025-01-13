@@ -1,23 +1,43 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import axios from "axios";
+import { useNavigate } from "react-router-dom"; // For navigation to login/signup
 
 const AttendancePage = () => {
-  const [imageSrc, setImageSrc] = useState(null); // Holds captured image
-  const [location, setLocation] = useState(null); // Holds geolocation data
-  const [webcamEnabled, setWebcamEnabled] = useState(true); // Webcam state
+  const [imageSrc, setImageSrc] = useState(null);
+  const [location, setLocation] = useState(null);
+  const [webcamEnabled, setWebcamEnabled] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
 
   const webcamRef = React.useRef(null);
+  const navigate = useNavigate();
 
-  // Function to mark attendance
+  // Check login status on component mount
+  useEffect(() => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setIsLoggedIn(false);
+    alert("Logged out successfully!");
+    navigate("/login"); // Redirect to login page
+  };
+
   const handleMarkAttendance = async () => {
-    // Validate webcam
+    // if (!isLoggedIn) {
+    //   alert("Please log in to mark attendance.");
+    //   return;
+    // }
+
     if (!webcamRef.current) {
       alert("Webcam not initialized. Please try again.");
       return;
     }
 
-    // Capture photo
     const capturedImage = webcamRef.current.getScreenshot();
     if (!capturedImage) {
       alert("Failed to capture image. Please try again.");
@@ -25,7 +45,6 @@ const AttendancePage = () => {
     }
     setImageSrc(capturedImage);
 
-    // Check for geolocation support
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by this browser.");
       return;
@@ -34,19 +53,17 @@ const AttendancePage = () => {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        setLocation({ latitude, longitude }); // For local display
+        setLocation({ latitude, longitude });
 
-        // Prepare data for API call
         const attendanceData = new FormData();
         attendanceData.append("image", dataURItoBlob(capturedImage), "attendance.jpg");
         attendanceData.append("latitude", latitude);
         attendanceData.append("longitude", longitude);
-        attendanceData.append("timestamp", new Date().toISOString()); // Add the timestamp
+        attendanceData.append("timestamp", new Date().toISOString());
 
         try {
-          // API call to mark attendance
           const response = await axios.post(
-            "https://online-attendence-backend.vercel.app/api/attendance",
+            "http://localhost:5000/api/attendance",
             attendanceData,
             {
               headers: {
@@ -54,10 +71,9 @@ const AttendancePage = () => {
               },
             }
           );
-          console.log("Attendance marked successfully:", response.data);
           alert("Attendance marked successfully!");
           setImageSrc(null);
-          setWebcamEnabled(false); // Disable webcam for a new capture
+          setWebcamEnabled(false);
         } catch (error) {
           console.error("Error marking attendance:", error);
           alert("Failed to mark attendance. Please check your network connection and try again.");
@@ -70,7 +86,6 @@ const AttendancePage = () => {
     );
   };
 
-  // Helper function to convert base64 to Blob (for image upload)
   const dataURItoBlob = (dataURI) => {
     const byteString = atob(dataURI.split(",")[1]);
     const mimeString = dataURI.split(",")[0].split(":")[1].split(";")[0];
@@ -84,9 +99,28 @@ const AttendancePage = () => {
 
   return (
     <div className="flex items-center justify-center h-screen w-screen bg-gray-100">
+      <div className="absolute top-4 right-4">
+        {isLoggedIn ? (
+          <button
+            className="px-4 py-2 bg-red-500 text-white font-bold rounded-lg shadow-md"
+            onClick={handleLogout}
+          >
+            Logout
+          </button>
+        ) : (
+          <button
+            className="px-4 py-2 bg-blue-500 text-white font-bold rounded-lg shadow-md"
+            onClick={() => navigate("/login")}
+          >
+            Login
+          </button>
+        )}
+      </div>
+
       <div className="flex flex-col items-center justify-center border-4 border-gray-400 rounded-xl p-8 bg-white shadow-lg max-w-lg w-11/12">
-        <h1 className="text-2xl font-extrabold text-gray-800 mb-4 tracking-wide uppercase text-center"
-        >Online Attendance</h1>
+        <h1 className="text-2xl font-extrabold text-gray-800 mb-4 tracking-wide uppercase text-center">
+          Online Attendance
+        </h1>
         <div className="flex items-center justify-center w-full max-w-md aspect-[4/3] bg-gray-200 border-2 border-gray-300 rounded-lg shadow-md">
           {webcamEnabled && (
             <Webcam

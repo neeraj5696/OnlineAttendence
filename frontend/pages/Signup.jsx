@@ -9,43 +9,38 @@ function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rpassword, setRpassword] = useState("");
-  const [employeeId, setEmployeeId] = useState(""); // Added employee ID state
+  const [employeeId, setEmployeeId] = useState(""); 
   const [message, setMessage] = useState("");
 
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // Custom validation logic
-    if (!email) {
-      setMessage("Email is required");
-      return; // Prevent further execution if email is empty
-    }
-
-    if (!password) {
-      setMessage("Password is required");
-      return; // Prevent further execution if password is empty
-    }
-
-    if (!employeeId) {
-      setMessage("Employee ID is required");
-      return; // Prevent further execution if employee ID is empty
+    if (!email || !password || !employeeId) {
+      setMessage("All fields are required.");
+      return;
     }
 
     if (password !== rpassword) {
       setMessage("Passwords do not match!");
-      return; // Prevent further execution if passwords don't match
+      return;
     }
 
     try {
-      await axios.post("http://localhost:5000/api/auth/register", {
+      const response = await axios.post("http://localhost:5000/api/auth/register", {
         email,
         password,
-        employeeId, // Include employee ID in the registration request
+        employeeId
       });
-      setMessage("Registered successfully! Redirecting...");
-      setTimeout(() => {
-        navigate("/");
-      }, 2000);
+
+      if (response.status === 201) {
+        // Store employee ID and email in localStorage
+        localStorage.setItem("email", email);
+        localStorage.setItem("employeeId", employeeId);
+        setMessage("Registered successfully! Redirecting...");
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
+      }
     } catch (error) {
       console.error("Error occurred", error);
       setMessage("Failed to register. Please try again.");
@@ -60,7 +55,6 @@ function Signup() {
           <MdMovie />
         </div>
 
-        {/* Email input */}
         <div className="input-container">
           <input
             type="text"
@@ -70,7 +64,6 @@ function Signup() {
           />
         </div>
 
-        {/* Password input */}
         <div className="input-container">
           <input
             type="password"
@@ -80,7 +73,6 @@ function Signup() {
           />
         </div>
 
-        {/* Repeat Password input */}
         <div className="input-container">
           <input
             type="password"
@@ -90,7 +82,6 @@ function Signup() {
           />
         </div>
 
-        {/* Employee ID input */}
         <div className="input-container">
           <input
             type="text"
@@ -100,12 +91,10 @@ function Signup() {
           />
         </div>
 
-        {/* Submit button */}
         <div className="button-container">
           <button type="submit">Create an account</button>
         </div>
 
-        {/* Link to login page */}
         <div className="account-message">
           Already have an account?
           <button
