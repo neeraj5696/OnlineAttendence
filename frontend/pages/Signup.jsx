@@ -9,43 +9,49 @@ function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rpassword, setRpassword] = useState("");
-  const [employeeId, setEmployeeId] = useState(""); 
+  const [employeeId, setEmployeeId] = useState("");
   const [message, setMessage] = useState("");
 
   const handleRegister = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!email || !password || !employeeId) {
-      setMessage("All fields are required.");
-      return;
-    }
+  if (!email || !password || !employeeId) {
+    setMessage("All fields are required.");
+    return;
+  }
 
-    if (password !== rpassword) {
-      setMessage("Passwords do not match!");
-      return;
-    }
+  if (password !== rpassword) {
+    setMessage("Passwords do not match!");
+    return;
+  }
 
-    try {
-      const response = await axios.post("http://localhost:5000/api/auth/register", {
-        email,
-        password,
-        employeeId
-      });
-
-      if (response.status === 201) {
-        // Store employee ID and email in localStorage
-        localStorage.setItem("email", email);
-        localStorage.setItem("employeeId", employeeId);
-        setMessage("Registered successfully! Redirecting...");
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
-      }
-    } catch (error) {
-      console.error("Error occurred", error);
-      setMessage("Failed to register. Please try again.");
-    }
+  const data = {
+    email: email,
+    password: password
   };
+
+  try {
+    const response = await axios.post("http://localhost:5000/auth/register", data, {
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.status === 201) {
+      // Store employee ID and email in localStorage
+      localStorage.setItem("email", email);
+      localStorage.setItem("employeeId", employeeId);
+      setMessage("Registered successfully! Redirecting...");
+      setTimeout(() => {
+        navigate("/");
+      }, 2000);
+    }
+  } catch (error) {
+    console.error("Error occurred", error);
+    setMessage("Failed to register. Please try again.");
+  }
+};
+
 
   return (
     <div className="form-container">

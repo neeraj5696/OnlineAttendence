@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 const multer = require("multer");
 const nodemailer = require('nodemailer');
 const { getMaxListeners } = require("nodemailer/lib/xoauth2");
-
+const authRoutes = require('./Controller/Auth');
 require('dotenv').config();
 
 
@@ -55,6 +55,7 @@ const Attendance = mongoose.model("Attendance", attendanceSchema, "attendances")
 
 // Create Router
 const router = express.Router();
+app.use('/auth', authRoutes);
 
 // Configure multer for in-memory storage
 const storage = multer.memoryStorage();

@@ -8,27 +8,33 @@ function Login() {
   const navigate = useNavigate();
   const [employeeId, setEmployeeId] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(""); // Added email state
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!employeeId || !password) {
-      setMessage("Employee ID and password are required.");
+    // Validate email, employeeId, and password
+    if (!email || !employeeId || !password) {
+      setMessage("All fields are required.");
       return;
     }
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
-        employeeId,
-        password
+      // Sending login credentials to the backend
+      const res = await axios.post("http://localhost:5000/auth/login", {
+        email, // Added email field
+        
+        password,
       });
 
+      // Assuming backend returns a token upon successful login
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("employeeId", employeeId);
       setMessage("User logged in successfully");
+      
       setTimeout(() => {
-        navigate("/home");
+        navigate("/");
       }, 2000);
     } catch (error) {
       console.error("Error occurred", error);
@@ -45,6 +51,21 @@ function Login() {
           <MdMovie />
         </div>
 
+        {/* Email Input Field */}
+        <div className="input-container">
+          <input
+            type="email"
+            placeholder="Email Address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        {/* Custom message for empty email */}
+        {email === "" && (
+          <div className="error-message">Email is required</div>
+        )}
+
+        {/* Employee ID Input Field */}
         <div className="input-container">
           <input
             type="text"
@@ -54,6 +75,7 @@ function Login() {
           />
         </div>
 
+        {/* Password Input Field */}
         <div className="input-container">
           <input
             type="password"
@@ -63,6 +85,7 @@ function Login() {
           />
         </div>
 
+        {/* Submit Button */}
         <div className="button-container">
           <button type="submit">Login to your account</button>
         </div>

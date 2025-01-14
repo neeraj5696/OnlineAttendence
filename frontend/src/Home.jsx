@@ -14,7 +14,7 @@ const AttendancePage = () => {
 
   // Check login status on component mount
   useEffect(() => {
-    const user = localStorage.getItem("user");
+    const user = localStorage.getItem("employeeId");
     if (user) {
       setIsLoggedIn(true);
     }
