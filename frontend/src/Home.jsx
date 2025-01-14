@@ -63,7 +63,7 @@ const AttendancePage = () => {
 
         try {
           const response = await axios.post(
-            "http://localhost:5000/api/attendance" || "https://online-attendence-backend.vercel.app/api/attendance",
+            "http://localhost:5000/api/attendance" || "https://online-attendence-backend.vercel.app/api/attendance"|| "https://online-attendence-backend.vercel.app/",
             attendanceData,
             {
               headers: {
