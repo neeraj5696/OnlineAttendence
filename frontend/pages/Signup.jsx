@@ -31,7 +31,7 @@ function Signup() {
   };
 
   try {
-    const response = await axios.post("http://localhost:5000/auth/register", data, {
+    const response = await axios.post("https://online-attendence-backend-m93mf58wz-neeraj5696s-projects.vercel.app/auth/register", data, {
       headers: {
         "Content-Type": "application/json"
       }

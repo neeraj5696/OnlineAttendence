@@ -8,6 +8,7 @@ const AttendancePage = () => {
   const [location, setLocation] = useState(null);
   const [webcamEnabled, setWebcamEnabled] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
+  const [employeeId, setEmployeeId] = useState(""); // Store employeeId
 
   const webcamRef = React.useRef(null);
   const navigate = useNavigate();
@@ -17,21 +18,24 @@ const AttendancePage = () => {
     const user = localStorage.getItem("employeeId");
     if (user) {
       setIsLoggedIn(true);
+      setEmployeeId(user);
     }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    localStorage.removeItem("employeeId");
+
     setIsLoggedIn(false);
+    setEmployeeId(""); // Clear employeeId state
     alert("Logged out successfully!");
-    navigate("/login"); // Redirect to login page
+    navigate("/"); // Redirect to login page
   };
 
   const handleMarkAttendance = async () => {
-    // if (!isLoggedIn) {
-    //   alert("Please log in to mark attendance.");
-    //   return;
-    // }
+    if (!isLoggedIn) {
+      alert("Please log in to mark attendance.");
+      return;
+    }
 
     if (!webcamRef.current) {
       alert("Webcam not initialized. Please try again.");
@@ -63,7 +67,7 @@ const AttendancePage = () => {
 
         try {
           const response = await axios.post(
-            "http://localhost:5000/api/attendance" || "https://online-attendence-backend.vercel.app/api/attendance"|| "https://online-attendence-backend.vercel.app/",
+            "https://online-attendence-backend-m93mf58wz-neeraj5696s-projects.vercel.app/api/attendance" || "https://online-attendence-backend.vercel.app/api/attendance"|| "https://online-attendence-backend.vercel.app/",
             attendanceData,
             {
               headers: {
@@ -100,6 +104,11 @@ const AttendancePage = () => {
   return (
     <div className="flex items-center justify-center h-screen w-screen bg-gray-100">
       <div className="absolute top-4 right-4">
+      {isLoggedIn && (
+          <span className="text-gray-700 font-bold">
+            Employee ID: {employeeId}
+          </span>
+        )}
         {isLoggedIn ? (
           <button
             className="px-4 py-2 bg-red-500 text-white font-bold rounded-lg shadow-md"
@@ -116,6 +125,7 @@ const AttendancePage = () => {
           </button>
         )}
       </div>
+     
 
       <div className="flex flex-col items-center justify-center border-4 border-gray-400 rounded-xl p-8 bg-white shadow-lg max-w-lg w-11/12">
         <h1 className="text-2xl font-extrabold text-gray-800 mb-4 tracking-wide uppercase text-center">

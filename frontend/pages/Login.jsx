@@ -22,7 +22,7 @@ function Login() {
 
     try {
       // Sending login credentials to the backend
-      const res = await axios.post("http://localhost:5000/auth/login", {
+      const res = await axios.post("https://online-attendence-backend-m93mf58wz-neeraj5696s-projects.vercel.app/auth/login", {
         email, // Added email field
         
         password,
